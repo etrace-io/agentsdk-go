@@ -10,6 +10,7 @@ import (
 
 	"github.com/stellarlinkco/agentsdk-go/pkg/config"
 	hooks "github.com/stellarlinkco/agentsdk-go/pkg/hooks"
+	"github.com/stellarlinkco/agentsdk-go/pkg/message"
 	"github.com/stellarlinkco/agentsdk-go/pkg/sandbox"
 	"github.com/stellarlinkco/agentsdk-go/pkg/tool"
 )
@@ -150,7 +151,7 @@ func New(ctx context.Context, opts Options) (*Runtime, error) {
 	opts.SystemPromptBuilder = builder
 	opts.SystemPrompt = builder.Build()
 
-	histories := newHistoryStore(opts.MaxSessions)
+	histories := newHistoryStore(opts.MaxSessions, opts.HistoryLoader)
 
 	rt := &Runtime{
 		opts:      opts,
@@ -356,6 +357,14 @@ func (rt *Runtime) Sandbox() *sandbox.Manager {
 		return nil
 	}
 	return rt.executor.Sandbox()
+}
+
+// SessionHistory returns the in-memory history for a session, or nil.
+func (rt *Runtime) SessionHistory(sessionID string) *message.History {
+	if rt == nil || rt.histories == nil {
+		return nil
+	}
+	return rt.histories.Get(sessionID)
 }
 
 // ----------------- internal helpers -----------------

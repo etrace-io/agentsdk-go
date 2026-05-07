@@ -9,7 +9,7 @@ import (
 )
 
 func TestSessionEvictionCleansToolOutputDir(t *testing.T) {
-	store := newHistoryStore(1)
+	store := newHistoryStore(1, nil)
 	sessionID := "session-to-evict"
 	dir := toolOutputSessionDir(sessionID)
 	t.Cleanup(func() { _ = os.RemoveAll(dir) })
@@ -36,7 +36,7 @@ func TestSessionEvictionCleansToolOutputDir(t *testing.T) {
 }
 
 func TestSessionEvictionInvokesCallbackWhenPresent(t *testing.T) {
-	store := newHistoryStore(1)
+	store := newHistoryStore(1, nil)
 	var evicted []string
 
 	store.onEvict = func(id string) {
@@ -53,7 +53,7 @@ func TestSessionEvictionInvokesCallbackWhenPresent(t *testing.T) {
 }
 
 func TestRuntimeCloseCleansToolOutputDirs(t *testing.T) {
-	rt := &Runtime{histories: newHistoryStore(0)}
+	rt := &Runtime{histories: newHistoryStore(0, nil)}
 
 	sessions := []string{"sess-a", "sess-b"}
 	for _, sessionID := range sessions {

@@ -47,7 +47,7 @@ func TestRuntimeBindsSubagentCompletionToHooksAndHistory(t *testing.T) {
 
 	rt := &Runtime{
 		opts:      Options{subMgr: mgr},
-		histories: newHistoryStore(4),
+		histories: newHistoryStore(4, nil),
 		hooks:     exec,
 	}
 	rt.bindSubagentCallbacks()
@@ -127,7 +127,7 @@ func TestRuntimeCanDisableSubagentSummaryInjection(t *testing.T) {
 
 	rt := &Runtime{
 		opts:      Options{DisableSubagentSummary: true, subMgr: mgr},
-		histories: newHistoryStore(4),
+		histories: newHistoryStore(4, nil),
 		hooks:     hooks.NewExecutor(),
 	}
 	rt.bindSubagentCallbacks()

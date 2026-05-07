@@ -15,6 +15,7 @@ import (
 
 	"github.com/stellarlinkco/agentsdk-go/pkg/config"
 	hooks "github.com/stellarlinkco/agentsdk-go/pkg/hooks"
+	"github.com/stellarlinkco/agentsdk-go/pkg/message"
 	"github.com/stellarlinkco/agentsdk-go/pkg/middleware"
 	"github.com/stellarlinkco/agentsdk-go/pkg/model"
 	"github.com/stellarlinkco/agentsdk-go/pkg/runtime/skills"
@@ -162,6 +163,7 @@ type Options struct {
 	MaxTokensEscalation    MaxTokensEscalationConfig
 	MaxSessions            int
 	MaxConcurrentSubagents int
+	HistoryLoader          func(sessionID string) ([]message.Message, error) // loader for session history restoration
 	Tools                  []tool.Tool
 	EnabledBuiltinTools    []string
 	DisallowedTools        []string
@@ -242,6 +244,13 @@ type SandboxReport struct {
 	AllowedPaths   []string
 	AllowedDomains []string
 	ResourceLimits sandbox.ResourceLimits
+}
+
+// WithHistoryLoader sets a function that is called when a new session is created.
+// The loader receives the session ID and should return previously persisted messages,
+// or nil/error if no history exists.
+func WithHistoryLoader(loader func(string) ([]message.Message, error)) func(*Options) {
+	return func(o *Options) { o.HistoryLoader = loader }
 }
 
 func WithMaxSessions(n int) func(*Options) {

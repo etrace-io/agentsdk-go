@@ -316,7 +316,7 @@ type historyStore struct {
 	loader   func(string) ([]message.Message, error)
 }
 
-func newHistoryStore(maxSize int) *historyStore {
+func newHistoryStore(maxSize int, loader func(string) ([]message.Message, error)) *historyStore {
 	if maxSize <= 0 {
 		maxSize = defaultMaxSessions
 	}
@@ -324,6 +324,7 @@ func newHistoryStore(maxSize int) *historyStore {
 		data:     map[string]*message.History{},
 		lastUsed: map[string]time.Time{},
 		maxSize:  maxSize,
+		loader:   loader,
 	}
 }
 
