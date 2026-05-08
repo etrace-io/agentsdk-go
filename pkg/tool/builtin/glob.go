@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/bmatcuk/doublestar/v4"
 	"github.com/stellarlinkco/agentsdk-go/pkg/gitignore"
 	"github.com/stellarlinkco/agentsdk-go/pkg/sandbox"
 	"github.com/stellarlinkco/agentsdk-go/pkg/tool"
@@ -118,7 +119,7 @@ func (g *GlobTool) Execute(ctx context.Context, params map[string]interface{}) (
 		g.gitignoreMatcher, _ = gitignore.NewMatcher(g.root) //nolint:errcheck // best-effort gitignore
 	}
 
-	matches, err := filepath.Glob(absPattern)
+	matches, err := doublestar.FilepathGlob(absPattern)
 	if err != nil {
 		return nil, fmt.Errorf("glob failed: %w", err)
 	}
@@ -148,7 +149,9 @@ func (g *GlobTool) Execute(ctx context.Context, params map[string]interface{}) (
 		}
 	}
 
-	truncated := len(matches) > len(results) || len(results) >= g.maxResults
+	// len(matches) > len(results) 会把 gitignore 过滤掉的结果也算作截断
+	// 仅在结果数达到上限时才报告截断
+	truncated := len(results) >= g.maxResults
 
 	return &tool.ToolResult{
 		Success: true,
@@ -223,7 +226,10 @@ func (g *GlobTool) combinePattern(dir, pattern string) (string, error) {
 	}
 	candidate = filepath.Clean(candidate)
 	parent := filepath.Dir(candidate)
-	if g.policy != nil {
+	if strings.ContainsAny(parent, "*?[") {
+		// Pattern contains wildcards in directory portion; skip prefix
+		// validation — FilepathGlob will resolve the pattern at execution.
+	} else if g.policy != nil {
 		if err := g.policy.Validate(parent); err != nil {
 			return "", err
 		}
