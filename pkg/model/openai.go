@@ -382,14 +382,12 @@ func convertMessagesToOpenAI(msgs []Message, defaults ...string) []openai.ChatCo
 			}
 			content := msg.Content
 			if strings.TrimSpace(content) == "" {
-				content = "\u200b" // 零宽空格占位，避免 OpenAI 空 Content 报错
-			}
+				content = "\u200b"			}
 			result = append(result, openai.UserMessage(content))
 		}
 	}
 
 	if len(result) == 0 {
-		// 零宽空格占位，避免 OpenAI 空 Content 报错
 			result = append(result, openai.UserMessage("\u200b"))
 	}
 
@@ -416,7 +414,6 @@ func buildOpenAIUserContentParts(msg Message) []openai.ChatCompletionContentPart
 		}
 	}
 	if len(parts) == 0 {
-		// 零宽空格占位，避免 OpenAI 空 Content 报错
 		parts = append(parts, openai.TextContentPart("\u200b"))
 	}
 	return parts
@@ -445,8 +442,7 @@ func buildOpenAIAssistantMessage(msg Message) openai.ChatCompletionMessageParamU
 	// Set content
 	content := msg.Content
 	if strings.TrimSpace(content) == "" {
-		content = "\u200b" // 零宽空格占位，避免 OpenAI 空 Content 报错
-	}
+		content = "\u200b"	}
 	assistantParam.Content = openai.ChatCompletionAssistantMessageParamContentUnion{
 		OfString: openai.String(content),
 	}
