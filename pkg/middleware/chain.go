@@ -83,6 +83,26 @@ func (c *Chain) Execute(ctx context.Context, stage Stage, st *State) error {
 	return nil
 }
 
+// ExecuteStreamDelta calls AgentTextDelta on every middleware that
+// implements StreamMiddleware. Stops on the first error.
+func (c *Chain) ExecuteStreamDelta(ctx context.Context, st *State, delta string) error {
+	c.mu.RLock()
+	mws := make([]Middleware, len(c.middlewares))
+	copy(mws, c.middlewares)
+	c.mu.RUnlock()
+
+	for _, mw := range mws {
+		sm, ok := mw.(StreamMiddleware)
+		if !ok {
+			continue
+		}
+		if err := sm.AgentTextDelta(ctx, st, delta); err != nil {
+			return fmt.Errorf("middleware %s AgentTextDelta failed: %w", middlewareName(mw), err)
+		}
+	}
+	return nil
+}
+
 func (c *Chain) runWithTimeout(ctx context.Context, fn func(context.Context) error, mw Middleware) error {
 	if c.timeout <= 0 {
 		return fn(ctx)

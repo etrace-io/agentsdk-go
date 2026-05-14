@@ -236,6 +236,12 @@ func (m *anthropicModel) CompleteStream(ctx context.Context, req Request, cb Str
 						return err
 					}
 				}
+				// 透传 thinking delta（如 Claude 的 interleaved-thinking）
+				if thinkingDelta := ev.Delta.AsThinkingDelta().Thinking; thinkingDelta != "" {
+					if err := cb(StreamResult{Delta: thinkingDelta, IsReasoning: true}); err != nil {
+						return err
+					}
+				}
 			case anthropicsdk.ContentBlockStopEvent:
 				if tool := extractToolCall(final); tool != nil {
 					if err := cb(StreamResult{ToolCall: tool}); err != nil {
@@ -421,7 +427,7 @@ func convertMessages(msgs []Message, enableCache bool, defaults ...string) ([]an
 			} else {
 				text := msg.Content
 				if strings.TrimSpace(text) == "" {
-					text = "."
+					text = "\u200b"
 				}
 				content = []anthropicsdk.ContentBlockParamUnion{
 					anthropicsdk.NewTextBlock(text),
@@ -438,7 +444,7 @@ func convertMessages(msgs []Message, enableCache bool, defaults ...string) ([]an
 		messageParams = append(messageParams, anthropicsdk.MessageParam{
 			Role: anthropicsdk.MessageParamRoleUser,
 			Content: []anthropicsdk.ContentBlockParamUnion{
-				anthropicsdk.NewTextBlock("."),
+				anthropicsdk.NewTextBlock("\u200b"),
 			},
 		})
 	}
@@ -496,7 +502,7 @@ func buildAssistantContent(msg Message) []anthropicsdk.ContentBlockParamUnion {
 		blocks = append(blocks, anthropicsdk.NewToolUseBlock(id, cloneValue(call.Arguments), name))
 	}
 	if len(blocks) == 0 {
-		blocks = append(blocks, anthropicsdk.NewTextBlock("."))
+		blocks = append(blocks, anthropicsdk.NewTextBlock("\u200b"))
 	}
 	return blocks
 }
@@ -534,7 +540,7 @@ func convertContentBlocks(blocks []ContentBlock) []anthropicsdk.ContentBlockPara
 		case ContentBlockText:
 			text := b.Text
 			if strings.TrimSpace(text) == "" {
-				text = "."
+				text = "\u200b"
 			}
 			out = append(out, anthropicsdk.NewTextBlock(text))
 		case ContentBlockImage:
@@ -552,7 +558,7 @@ func convertContentBlocks(blocks []ContentBlock) []anthropicsdk.ContentBlockPara
 		}
 	}
 	if len(out) == 0 {
-		out = append(out, anthropicsdk.NewTextBlock("."))
+		out = append(out, anthropicsdk.NewTextBlock("\u200b"))
 	}
 	return out
 }

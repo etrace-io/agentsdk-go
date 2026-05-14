@@ -25,8 +25,8 @@ type State struct {
 	Values      map[string]any
 }
 
-// Middleware defines all four interception points. Implementations may
-// no-op individual methods when the hook is not needed.
+// Middleware defines interception points for the agent runtime.
+// Implementations may no-op individual methods when the hook is not needed.
 type Middleware interface {
 	Name() string
 	BeforeAgent(ctx context.Context, st *State) error
@@ -35,15 +35,23 @@ type Middleware interface {
 	AfterAgent(ctx context.Context, st *State) error
 }
 
+// StreamMiddleware is an optional extension for middleware that want
+// real-time text deltas during model streaming. The Chain calls
+// AgentTextDelta for each middleware that implements this interface.
+type StreamMiddleware interface {
+	AgentTextDelta(ctx context.Context, st *State, delta string) error
+}
+
 // Funcs is a helper that turns a set of function pointers into a Middleware.
 // Unspecified hooks default to no-ops.
 type Funcs struct {
 	Identifier string
 
-	OnBeforeAgent func(ctx context.Context, st *State) error
-	OnBeforeTool  func(ctx context.Context, st *State) error
-	OnAfterTool   func(ctx context.Context, st *State) error
-	OnAfterAgent  func(ctx context.Context, st *State) error
+	OnBeforeAgent    func(ctx context.Context, st *State) error
+	OnBeforeTool     func(ctx context.Context, st *State) error
+	OnAfterTool      func(ctx context.Context, st *State) error
+	OnAfterAgent     func(ctx context.Context, st *State) error
+	OnAgentTextDelta func(ctx context.Context, st *State, delta string) error
 }
 
 func (f Funcs) Name() string {
@@ -79,4 +87,11 @@ func (f Funcs) AfterAgent(ctx context.Context, st *State) error {
 		return nil
 	}
 	return f.OnAfterAgent(ctx, st)
+}
+
+func (f Funcs) AgentTextDelta(ctx context.Context, st *State, delta string) error {
+	if f.OnAgentTextDelta == nil {
+		return nil
+	}
+	return f.OnAgentTextDelta(ctx, st, delta)
 }

@@ -155,14 +155,17 @@ func (m *openaiModel) CompleteStream(ctx context.Context, req Request, cb Stream
 
 				delta := choice.Delta
 
-				// Handle reasoning_content from thinking models
+				// 处理 thinking 模型的 reasoning_content 增量，以 IsReasoning 标记回调给上游
 				if raw := delta.RawJSON(); raw != "" {
 					var dp map[string]json.RawMessage
 					if err := json.Unmarshal([]byte(raw), &dp); err == nil {
 						if rc, ok := dp["reasoning_content"]; ok {
 							var s string
-							if json.Unmarshal(rc, &s) == nil {
+							if json.Unmarshal(rc, &s) == nil && s != "" {
 								accumulatedReasoning.WriteString(s)
+								if err := cb(StreamResult{Delta: s, IsReasoning: true}); err != nil {
+									return err
+								}
 							}
 						}
 					}

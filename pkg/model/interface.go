@@ -102,10 +102,11 @@ type Response struct {
 
 // StreamResult delivers incremental updates during streaming calls.
 type StreamResult struct {
-	Delta    string
-	ToolCall *ToolCall
-	Final    bool
-	Response *Response
+	Delta       string
+	ToolCall    *ToolCall
+	Final       bool
+	Response    *Response
+	IsReasoning bool // Delta 为 reasoning/thinking 内容（非回答文本）
 }
 
 // StreamHandler consumes streaming updates in order.

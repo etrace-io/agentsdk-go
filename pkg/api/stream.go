@@ -27,6 +27,7 @@ const (
 	EventToolExecutionStart  = "tool_execution_start"
 	EventToolExecutionOutput = "tool_execution_output"
 	EventToolExecutionResult = "tool_execution_result"
+	EventReasoningDelta      = "reasoning_delta"
 	EventError               = "error"
 )
 
