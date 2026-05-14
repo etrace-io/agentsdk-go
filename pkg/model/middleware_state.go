@@ -13,6 +13,18 @@ const (
 	MiddlewareStateKey = middlewareStateKey
 )
 
+// TextDeltaHandler 是流式文本增量的回调签名。当模型流式输出文本时,
+// runtime 通过 context 传递此回调,供 CompleteStream 内部调用。
+type TextDeltaHandler func(delta string) error
+
+type textDeltaHandlerKey string
+
+const (
+	textDeltaHandlerCtxKey textDeltaHandlerKey = "github.com/stellarlinkco/agentsdk-go/text-delta-handler"
+	// TextDeltaHandlerKey 供外部调用方将 TextDeltaHandler 存入 context。
+	TextDeltaHandlerKey = textDeltaHandlerCtxKey
+)
+
 // MiddlewareState is the minimal contract required for model providers to
 // surface request/response data to middleware consumers without depending on
 // the middleware package (which would cause an import cycle).

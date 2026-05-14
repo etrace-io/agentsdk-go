@@ -246,7 +246,12 @@ func (rt *Runtime) runLoop(prep preparedRun, mdl model.Model, hookAdapter *runti
 			return last, err
 		}
 
-		resp, err := rt.completeWithRecovery(ctx, mdl, req, prep.history, tracer, agentSpan, prep.normalized)
+		// 将流式文本增量回调注入 context,供 CompleteStream 内部调用
+		streamCtx := context.WithValue(ctx, model.TextDeltaHandlerKey, model.TextDeltaHandler(func(delta string) error {
+			return chain.ExecuteStreamDelta(ctx, state, delta)
+		}))
+
+		resp, err := rt.completeWithRecovery(streamCtx, mdl, req, prep.history, tracer, agentSpan, prep.normalized)
 		if err != nil {
 			runErr = err
 			return last, err

@@ -158,7 +158,13 @@ func collectStreamWithTimeout(ctx context.Context, mdl model.Model, req model.Re
 
 func runStreamCollection(ctx context.Context, mdl model.Model, req model.Request, progress chan<- struct{}) streamOutcome {
 	var final *model.Response
+	deltaHandler := textDeltaHandlerFromCtx(ctx)
 	err := mdl.CompleteStream(ctx, req, func(sr model.StreamResult) error {
+		if deltaHandler != nil && sr.Delta != "" {
+			if err := deltaHandler(sr.Delta); err != nil {
+				return err
+			}
+		}
 		if progress != nil {
 			select {
 			case progress <- struct{}{}:
@@ -226,6 +232,17 @@ func nextEscalatedMaxTokens(current, ceiling int) int {
 		return current
 	}
 	return next
+}
+
+func textDeltaHandlerFromCtx(ctx context.Context) model.TextDeltaHandler {
+	if ctx == nil {
+		return nil
+	}
+	h, ok := ctx.Value(model.TextDeltaHandlerKey).(model.TextDeltaHandler)
+	if !ok {
+		return nil
+	}
+	return h
 }
 
 func (s streamOutcome) String() string {

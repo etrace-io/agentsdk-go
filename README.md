@@ -99,17 +99,19 @@ The SDK exposes interception at critical stages of request handling:
 ```
 User request
   ↓
-before_agent  ← Request validation, audit logging
+before_agent      ← Request validation, audit logging
+  ↓
+agent_text_delta  ← Real-time streaming text deltas (optional, via StreamMiddleware)
   ↓
 Agent loop
   ↓
-before_tool   ← Tool parameter validation
+before_tool       ← Tool parameter validation
   ↓
 Tool execution
   ↓
-after_tool    ← Result post-processing
+after_tool        ← Result post-processing
   ↓
-after_agent   ← Response formatting, metrics collection
+after_agent       ← Response formatting, metrics collection
   ↓
 User response
 ```
@@ -583,6 +585,10 @@ customMiddleware := middleware.Funcs{
     },
     OnAfterTool: func(ctx context.Context, st *middleware.State) error {
         // After tool execution; st.ToolResult holds the agent.ToolResult
+        return nil
+    },
+    OnAgentTextDelta: func(ctx context.Context, st *middleware.State, delta string) error {
+        // Real-time streaming text delta during model inference
         return nil
     },
 }
